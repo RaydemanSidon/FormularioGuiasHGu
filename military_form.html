@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulário do Exército</title>
+    <link rel="stylesheet" type="text/css" href="estilo.css">
+</head>
+<body>
+    <div class="container">
+        <div class="logo" >
+            <img src="image/LOGO.png" width="150" height="200">
+         
+            
+            <h2>HOSPITAL DE GUARNIÇÃO DE PORTO VELHO</h2>
+            <h2>Formulário para Cadastro de Guias</h2>
+        </div>
+
+        
+        
+        <form id="militarForm" action="#" method="POST">
+            <div class="form-group">
+                <label for="nome">DIGITE SEU NOME <span class="required">*</span></label>
+                <input type="text" id="nome" name="nome" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="paciente">DIGITE O NOME DO PACIENTE<span class="required">*</span></label>
+                <input type="text" id="paciente" name="paciente" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="prec">DIGITE O PREC CP OU PASS (NÚMERO DA CARTEIRINHA) <span class="required">*</span></label>
+                <input type="text" id="prec" name="prec" required>
+            </div>
+            
+            <div class="form-group local-procedimento">
+                <label for="local">ONDE DESEJA REALIZAR O PROCEDIMENTO?  <span class="required">*</span></label>
+                <div class="qrcode-container">
+                    <input type="text" id="local" name="local" required>
+            
+                </div>
+                <div class="help-text">
+                    <a href="https://bit.ly/4hUVLBJ" target="_blank">LISTA DE CONVENIADOS</a>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>O SR(ª) ESTÁ CIENTE QUE É NECESSÁRIO, AO VIR BUSCAR SUA(S) GUIA(S), TRAZER OS PEDIDOS MÉDICOS ORIGINAIS? <span class="required">*</span></label>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="sim" name="ciente" value="SIM">
+                    <label for="sim" style="display: inline;">SIM</label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="nao" name="ciente" value="NÃO">
+                    <label for="nao" style="display: inline;">NÃO</label>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="telefone">QUAL SEU TELEFONE DE CONTATO COM (DDD), OU NUMERO DE WHATSAPP? <span class="required">*</span></label>
+                <input type="tel" id="telefone" name="telefone" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="duvidas">SEU PEDIDO ESTÁ INCLUÍDO NA FILA DE ATENDIMENTO VIRTUAL PARA EMISSÃO DE GUIAS DO FUSEX. QUANDO ESTIVER PRONTO, ENTRAREMOS EM CONTATO. QUALQUER DÚVIDA OU RECLAMAÇÃO INCLUA AQUI</label>
+                <textarea id="duvidas" name="duvidas" rows="4"></textarea>
+            </div>
+            
+            <h2>Anexar Documento</h2>
+        
+        <div class="upload-area" id="dropArea">
+            <div class="upload-icon">📄</div>
+            <div class="upload-text">Arraste e solte arquivos aqui ou clique para selecionar</div>
+            <div class="btn-container">
+                <button class="btn btn-primary" id="selectFileBtn">
+                    <span>📎</span> Escolher Arquivo
+                </button>
+                <button class="btn btn-secondary" id="takePictureBtn">
+                    <span>📷</span> Tirar Foto
+                </button>
+                <input type="file" id="fileInput" class="file-input" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" multiple>
+            </div>
+        </div>
+        
+        <div class="file-list" id="fileList">
+            <!-- Arquivos selecionados aparecerão aqui -->
+        </div>
+        
+        <div class="camera-container" id="cameraContainer">
+            <video id="cameraPreview" autoplay></video>
+            <div class="camera-buttons">
+                <button class="btn btn-primary" id="captureBtn">Capturar</button>
+                <button class="btn" id="cancelCameraBtn">Cancelar</button>
+            </div>
+            <img id="capturedImage" class="captured-image">
+        </div>
+        <button type="submit" class="submit-btn" id="submitBtn">Enviar</button>
+        <div class="form-footer">
+            <p>© 2025 Exército Brasileiro - Todos os direitos reservados</p>
+        </div>
+    </div>
+        </form>
+    </div>
+
+    <script>
+        
+        // Elementos DOM
+        const dropArea = document.getElementById('dropArea');
+        const fileInput = document.getElementById('fileInput');
+        const selectFileBtn = document.getElementById('selectFileBtn');
+        const takePictureBtn = document.getElementById('takePictureBtn');
+        const fileList = document.getElementById('fileList');
+        const cameraContainer = document.getElementById('cameraContainer');
+        const cameraPreview = document.getElementById('cameraPreview');
+        const captureBtn = document.getElementById('captureBtn');
+        const cancelCameraBtn = document.getElementById('cancelCameraBtn');
+        const capturedImage = document.getElementById('capturedImage');
+        
+        let stream;
+        let selectedFiles = [];
+        
+        // Evento para selecionar arquivos ao clicar no botão
+        selectFileBtn.addEventListener('click', () => {
+            fileInput.click();
+        });
+        
+        // Evento para quando arquivos são selecionados
+        fileInput.addEventListener('change', handleFileSelect);
+        
+        // Função para lidar com arquivos selecionados
+        function handleFileSelect(e) {
+            const files = e.target.files;
+            if (files.length === 0) return;
+            
+            // Adicionar os arquivos à lista
+            addFilesToList(files);
+        }
+        
+        // Função para adicionar arquivos à lista
+        function addFilesToList(files) {
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                
+                // Verificar se o arquivo já existe na lista
+                if (selectedFiles.some(f => f.name === file.name && f.size === file.size)) {
+                    continue;
+                }
+                
+                selectedFiles.push(file);
+                
+                // Criar elemento de lista para o arquivo
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                
+                const fileName = document.createElement('div');
+                fileName.className = 'file-name';
+                fileName.textContent = file.name;
+                
+                const fileRemove = document.createElement('div');
+                fileRemove.className = 'file-remove';
+                fileRemove.textContent = '×';
+                fileRemove.onclick = function() {
+                    // Remover o arquivo da lista
+                    selectedFiles = selectedFiles.filter(f => f !== file);
+                    fileList.removeChild(fileItem);
+                };
+                
+                fileItem.appendChild(fileName);
+                fileItem.appendChild(fileRemove);
+                fileList.appendChild(fileItem);
+            }
+        }
+        
+        // Suporte para arrastar e soltar
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropArea.addEventListener(eventName, highlight, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, unhighlight, false);
+        });
+        
+        function highlight() {
+            dropArea.classList.add('highlight');
+        }
+        
+        function unhighlight() {
+            dropArea.classList.remove('highlight');
+        }
+        
+        dropArea.addEventListener('drop', handleDrop, false);
+        
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            
+            addFilesToList(files);
+        }
+        
+        // Funcionalidade da câmera
+        takePictureBtn.addEventListener('click', startCamera);
+        captureBtn.addEventListener('click', capturePhoto);
+        cancelCameraBtn.addEventListener('click', stopCamera);
+        
+        async function startCamera() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'environment' } 
+                });
+                cameraPreview.srcObject = stream;
+                cameraContainer.style.display = 'block';
+                capturedImage.style.display = 'none';
+            } catch (err) {
+                console.error("Erro ao acessar a câmera: ", err);
+                alert("Não foi possível acessar a câmera. Verifique as permissões.");
+            }
+        }
+        
+        function capturePhoto() {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.width = cameraPreview.videoWidth;
+            canvas.height = cameraPreview.videoHeight;
+            
+            // Desenhar o frame atual no canvas
+            context.drawImage(cameraPreview, 0, 0, canvas.width, canvas.height);
+            
+            // Converter para blob
+            canvas.toBlob(blob => {
+                const file = new File([blob], `documento_${new Date().toISOString()}.jpg`, { type: 'image/jpeg' });
+                addFilesToList([file]);
+                
+                // Mostrar a imagem capturada
+                capturedImage.src = URL.createObjectURL(blob);
+                capturedImage.style.display = 'block';
+                
+                // Opcional: parar a câmera após a captura
+                stopCamera();
+            }, 'image/jpeg', 0.9);
+        }
+        
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+            cameraContainer.style.display = 'none';
+        }
+        document.getElementById('militaryForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Formulário enviado com sucesso! Em breve entraremos em contato.');
+        });
+       
+    </script>
+</body>
+</html>
